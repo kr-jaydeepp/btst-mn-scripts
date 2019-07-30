@@ -7,7 +7,8 @@ ssh_username="root"
 vps_setup_url="https://github.com/knackroot-technolabs-llp/dxg-mn-scripts/raw/master/vps-setup.sh"
 collateral_amount=1000
 ip_pubkey_db="$HOME/.dxg-masternode-list"
-mn_wait_threshold=3000
+mn_wait_threshold=$((15 * 60))
+pending_activations_list="$HOME/.dxg-pending-activation-list"
 
 wallet_passphrase="" ## Set this if your wallet is encrypted
 
@@ -38,25 +39,34 @@ main() {
     for ip in "${ips[@]}"; do
         ((index++)) || true
         mn_name="mn$index"
+
+        # run the setup script on the VPS
+        echo "Running the setup script on the remote VPS."
         ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" 'curl -fL '"$vps_setup_url"' | bash'
+
+        # unlock the local wallet
         if [[ ! -z "$wallet_passphrase" ]]; then
             dexergi-cli walletpassphrase "$wallet_passphrase" 0 false || true
         fi
 
+        # generate masternode's private key and create a collateral transaction
         mn_priv_key=$(dexergi-cli createmasternodekey)
         pub_key=$(dexergi-cli getaccountaddress "$mn_name")
+        echo "Generating the collateral transaction."
         mn_tx_hash=$(dexergi-cli sendtoaddress "$pub_key" $collateral_amount)
 
         # stop till the transaction has been included in a block
         echo "Waiting for the collateral transaction to be included in a block..."
         until dexergi-cli gettransaction "$mn_tx_hash" | grep -qs '"blockhash"'; do
-            echo "Transaction not included in the blockchai."
+            echo "Transaction not included in the blockchain."
             for (( i=15; i > 0; i-- )); do
                     echo -en "\rRechecking in $i seconds"
                     sleep 1
             done
             echo
         done
+
+        echo "Transaction has now been confirmed!"
 
         # get the vout index (default to 1, check if it's 0)
         vout_index=1
@@ -65,6 +75,7 @@ main() {
         fi
 
         # update the masternode.conf file and restart the daemon
+        echo "Updating the local masternode.conf file"
         dexergi-cli stop
         echo "$mn_name ${ip}:5536 $mn_priv_key $mn_tx_hash $vout_index" >> $data_dir/masternode.conf
         dexergid -daemon
@@ -73,12 +84,16 @@ main() {
                 echo -en "\rResuming in $i seconds"
                 sleep 1
         done
+        echo
+
+        # again, unlock the wallet
         if [[ ! -z "$wallet_passphrase" ]]; then
             dexergi-cli walletpassphrase "$wallet_passphrase" 0 false || true
         fi
 
 
         # update dexergi.conf on the vps
+        echo "Updating dexergi.conf on the remote VPS..."
         ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" '
             dexergi-cli stop
             echo -e "masternode=1\nmasternodeaddr='"${ip}"':5536\nmasternodeprivkey='"${mn_priv_key}"'" >> .dexergi/dexergi.conf
@@ -88,20 +103,36 @@ main() {
                     echo -en "\rResuming in $i seconds"
                     sleep 1
             done
+            echo
         '
-        # start masternode from the controller and from the vps
+        # start masternode from the controller
         dexergi-cli startmasternode alias false $mn_name
+
+        # start the hot node (vps)
+        hotnode_failed=""
         ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" '
-            i=0
+            elapsed=0
             until dexergi-cli startmasternode local false | grep -qs "Masternode successfully started"; do
-                if [[ "$i" == '"$mn_wait_threshold"' ]]; then
-                    echo "There seems to be some issue. Masternode failed to activate after '"$mn_wait_threshold"' seconds"
-                    exit 100
+                if [[ "$elapsed" == '"$mn_wait_threshold"' ]]; then
+                    echo "There seems to be some issue. Hot node (VPS) failed to activate after '"$mn_wait_threshold"' seconds"
+                    exit 1
                 fi
-                sleep 15
-                ((i += 15))
+
+                echo "Hot node (VPS) not ready after waiting for $elapsed seconds."
+                for (( i=15; i > 0; i-- )); do
+                        echo -en "\rRetrying in $i seconds"
+                        sleep 1
+                done
+                echo
+                ((elapsed += 15))
             done
-        '
+        ' || hotnode_failed="true"
+
+        # if hot node activation fails, continue on
+        if [[ ! -z "$hotnode_failed" ]]; then
+            echo "Failed to start the hot node (VPS). Adding it to $pending_activations_list." >&2
+            echo "$ip" >> "$pending_activations_list"
+        fi
 
         # write IP address, public key to the file
         echo "${ip},${pub_key}" >> "$ip_pubkey_db"
