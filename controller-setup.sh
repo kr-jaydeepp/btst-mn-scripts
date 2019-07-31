@@ -10,8 +10,6 @@ ip_pubkey_db="$HOME/.dxg-masternode-list"
 mn_wait_threshold=$((15 * 60))
 pending_activations_list="$HOME/.dxg-pending-activation-list"
 
-wallet_passphrase="" ## Set this if your wallet is encrypted
-
 ips=()
 
 main() {
@@ -46,8 +44,8 @@ main() {
         ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" 'curl -fL '"$vps_setup_url"' | bash'
 
         # unlock the local wallet
-        if [[ ! -z "$wallet_passphrase" ]]; then
-            dexergi-cli walletpassphrase "$wallet_passphrase" 0 false || true
+        if [[ ! -z "$DXG_WALLET_PASSPHRASE" ]]; then
+            dexergi-cli walletpassphrase "$DXG_WALLET_PASSPHRASE" 0 false || true
         fi
 
         # generate masternode's private key and create a collateral transaction
@@ -88,8 +86,8 @@ main() {
         echo
 
         # again, unlock the wallet
-        if [[ ! -z "$wallet_passphrase" ]]; then
-            dexergi-cli walletpassphrase "$wallet_passphrase" 0 false || true
+        if [[ ! -z "$DXG_WALLET_PASSPHRASE" ]]; then
+            dexergi-cli walletpassphrase "$DXG_WALLET_PASSPHRASE" 0 false || true
         fi
 
 
