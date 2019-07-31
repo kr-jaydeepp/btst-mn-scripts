@@ -105,31 +105,36 @@ main() {
             done
             echo
         '
-        # start masternode from the controller
-        dexergi-cli startmasternode alias false $mn_name
 
-        # start the hot node (vps)
-        hotnode_failed=""
-        ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" '
-            elapsed=0
-            until dexergi-cli startmasternode local false | grep -qs "Masternode successfully started"; do
-                if [[ "$elapsed" == '"$mn_wait_threshold"' ]]; then
-                    echo "There seems to be some issue. Hot node (VPS) failed to activate after '"$mn_wait_threshold"' seconds"
-                    exit 1
-                fi
+        hotnode_started="false"
+        elapsed=0
 
-                echo "Hot node (VPS) not ready after waiting for $elapsed seconds."
-                for (( i=15; i > 0; i-- )); do
-                        echo -en "\rRetrying in $i seconds"
-                        sleep 1
-                done
-                echo
-                ((elapsed += 15))
+        while [[ "$hotnode_started" == "false" ]]; do
+            # start masternode from the controller
+            output="$(dexergi-cli startmasternode alias false $mn_name)"
+            echo "$output"
+            echo "$output" | grep -qs 'Successfully started 1 masternode'
+
+            # start the hot node (vps)
+            ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" '
+                dexergi-cli startmasternode local false | grep -qs "Masternode successfully started"
+            ' && hotnode_started="true" && break || hotnode_started="false"
+
+            if [[ "$elapsed" == '"$mn_wait_threshold"' ]]; then
+                echo "There seems to be some issue. Hot node (VPS) failed to activate after '"$mn_wait_threshold"' seconds"
+                break
+            fi
+
+            echo "Hot node (VPS) not ready after waiting for $elapsed seconds."
+            for (( i=15; i > 0; i-- )); do
+                    echo -en "\rRetrying in $i seconds"
+                    sleep 1
             done
-        ' || hotnode_failed="true"
+            echo
+            ((elapsed += 15)) || true
+        done
 
-        # if hot node activation fails, continue on
-        if [[ ! -z "$hotnode_failed" ]]; then
+        if [[ "$hotnode_started" == "false" ]]; then
             echo "Failed to start the hot node (VPS). Adding it to $pending_activations_list." >&2
             echo "$ip" >> "$pending_activations_list"
         fi
