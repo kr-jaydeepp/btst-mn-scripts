@@ -25,6 +25,7 @@ main() {
         # assume all the arguments are the list of ips
         while [[ "$1" ]]; do
             ips+=("$1")
+            shift
         done
     fi
 
