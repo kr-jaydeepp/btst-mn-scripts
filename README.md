@@ -1,6 +1,12 @@
 # dxg-mn-scripts
 Scripts that facilitate an easy setup of dexergi masternodes  
 
+## Prerequisite
+* 1000 DXR
+* A main Linux computer(Your everyday computer)
+* Masternode Server(The computer that will be on 24/7)
+* A unique Public IP address for EACH masternode
+
 ## controller-setup.sh
 Following script runs on controlling wallet node and it helps in automating the process of creating and activating masternode.  
 
