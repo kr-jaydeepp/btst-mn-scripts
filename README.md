@@ -10,9 +10,22 @@ Scripts that facilitate an easy setup of dexergi masternodes
 ## controller-setup.sh
 Following script runs on controlling wallet node and it helps in automating the process of creating and activating masternode.  
 
+**Note**
+In case your remote system's username is not root then change `ssh_username` variable in the script as per actual system username.
+
+In case your datadir is different then default datadir then change the `data_dir` variable in the script.
+
 ### running the script
 ```bash
 ./controller-setup.sh [arguments]
+```
+**Note**
+If wallet is encrypted then declare an environment variable named as DXR_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
+
+Example of such command is here.
+```bash
+unset HISTFILE
+DXR_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
 ```
 
 controller-setup.sh script can take input of masternode ip address as arguement in one of the following ways.
@@ -28,17 +41,6 @@ Example:
 ```bash
 controller-setup.sh <filename>
 ```
-
-**Note**
-If wallet is encrypted then declare an environment variable named as DXR_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
-
-Example of such command is here.
-```bash
-unset HISTFILE
-DXR_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
-```
-
-In case your remote system's username is not root then change ssh_username variable in the script as per actual system username.
 
 After the script successfully executes following files are added to users home directory     
 * .dxr-masternode-list which keeps a record of all masternode ip address and respective public keys.
