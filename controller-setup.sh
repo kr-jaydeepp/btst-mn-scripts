@@ -4,11 +4,11 @@ set -eo pipefail
 
 data_dir="$HOME/.dexergi"
 ssh_username="root"
-vps_setup_url="https://github.com/knackroot-technolabs-llp/dxg-mn-scripts/raw/master/vps-setup.sh"
+vps_setup_url="https://github.com/dexergiproject/dxr-mn-scripts/raw/master/vps-setup.sh"
 collateral_amount=1000
-ip_pubkey_db="$HOME/.dxg-masternode-list"
+ip_pubkey_db="$HOME/.dxr-masternode-list"
 mn_wait_threshold=$((15 * 60))
-pending_activations_list="$HOME/.dxg-pending-activation-list"
+pending_activations_list="$HOME/.dxr-pending-activation-list"
 
 ips=()
 
@@ -44,8 +44,8 @@ main() {
         ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" 'curl -fL '"$vps_setup_url"' | bash'
 
         # unlock the local wallet
-        if [[ ! -z "$DXG_WALLET_PASSPHRASE" ]]; then
-            dexergi-cli walletpassphrase "$DXG_WALLET_PASSPHRASE" 0 false || true
+        if [[ ! -z "$DXR_WALLET_PASSPHRASE" ]]; then
+            dexergi-cli walletpassphrase "$DXR_WALLET_PASSPHRASE" 0 false || true
         fi
 
         # generate masternode's private key and create a collateral transaction
@@ -86,8 +86,8 @@ main() {
         echo
 
         # again, unlock the wallet
-        if [[ ! -z "$DXG_WALLET_PASSPHRASE" ]]; then
-            dexergi-cli walletpassphrase "$DXG_WALLET_PASSPHRASE" 0 false || true
+        if [[ ! -z "$DXR_WALLET_PASSPHRASE" ]]; then
+            dexergi-cli walletpassphrase "$DXR_WALLET_PASSPHRASE" 0 false || true
         fi
 
 

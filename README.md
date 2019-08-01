@@ -1,4 +1,4 @@
-# dxg-mn-scripts
+# dxr-mn-scripts
 Scripts that facilitate an easy setup of dexergi masternodes  
 
 ## Prerequisite
@@ -30,16 +30,16 @@ controller-setup.sh <filename>
 ```
 
 **Note**
-If wallet is encrypted then declare an environment variable named as DXG_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
+If wallet is encrypted then declare an environment variable named as DXR_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
 
 Example of such command is here.
 ```bash
 unset HISTFILE
-DXG_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
+DXR_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
 ```
 
 In case your remote system's username is not root then change ssh_username variable in the script as per actual system username.
 
 After the script successfully executes following files are added to users home directory     
-* .dxg-masternode-list which keeps a record of all masternode ip address and respective public keys.
-* .dxg-pending-activation-list which keeps a record of all masternode ip address which could not be activated post 15 minite of running of script due to hotnode activation errors. These nodes should be activated by user manually. 
+* .dxr-masternode-list which keeps a record of all masternode ip address and respective public keys.
+* .dxr-pending-activation-list which keeps a record of all masternode ip address which could not be activated post 15 minite of running of script due to hotnode activation errors. These nodes should be activated by user manually. 
