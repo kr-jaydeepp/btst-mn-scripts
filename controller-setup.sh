@@ -2,7 +2,13 @@
 
 set -eo pipefail
 
-data_dir="$HOME/.dexergi"
+data_dir=""
+if [[ "$OSTYPE" =~ ^darwin ]]; then
+    # we're on macOS
+    data_dir="$HOME/Library/Application Support/DEXERGI"
+else
+    data_dir="$HOME/.dexergi"
+fi
 ssh_username="root"
 vps_setup_url="https://github.com/dexergiproject/dxr-mn-scripts/raw/master/vps-setup.sh"
 collateral_amount=1000
@@ -11,6 +17,10 @@ mn_wait_threshold=$((15 * 60))
 pending_activations_list="$HOME/.dxr-pending-activation-list"
 
 ips=()
+
+function is_osx() {
+  [[ "$OSTYPE" =~ ^darwin ]] || return 1
+}
 
 main() {
     # get the list of IP addresses
@@ -29,7 +39,7 @@ main() {
 
     index=0
     # fetch the last masternode's index
-    line=$(tail -n1 $data_dir/masternode.conf | cut -d ' ' -f 1 || true)
+    line=$(tail -n1 "$data_dir"/masternode.conf | cut -d ' ' -f 1 || true)
     re='^mn[0-9]+$'
     if [[ "$line" =~ $re ]]; then
         index=$(echo $line | tail -c +3)
@@ -76,7 +86,7 @@ main() {
         # update the masternode.conf file and restart the daemon
         echo "Updating the local masternode.conf file"
         dexergi-cli stop
-        echo "$mn_name ${ip}:5536 $mn_priv_key $mn_tx_hash $vout_index" >> $data_dir/masternode.conf
+        echo "$mn_name ${ip}:5536 $mn_priv_key $mn_tx_hash $vout_index" >> "$data_dir"/masternode.conf
         dexergid -daemon
         echo "Waiting for the daemon to start up."
         for (( i=10; i > 0; i-- )); do
