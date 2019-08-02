@@ -119,8 +119,8 @@ main() {
                 dexergi-cli startmasternode local false | grep -qs "Masternode successfully started"
             ' && hotnode_started="true" && break || hotnode_started="false"
 
-            if [[ "$elapsed" == '"$mn_wait_threshold"' ]]; then
-                echo "There seems to be some issue. Hot node (VPS) failed to activate after '"$mn_wait_threshold"' seconds"
+            if [[ "$elapsed" -gt "$mn_wait_threshold" ]]; then
+                echo "There seems to be some issue. Hot node (VPS) failed to activate after $mn_wait_threshold seconds"
                 break
             fi
 
