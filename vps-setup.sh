@@ -6,7 +6,7 @@
 
 set -eo pipefail
 
-dxr_bin_url="https://github.com/dexergiproject/dexergi/releases/download/v1.1.0/dexergi-1.1.0-x86_64-linux-gnu.tar.gz"
+dxr_bin_url="https://github.com/dexergiproject/dexergi/releases/download/v1.2.0/dexergi-1.2.0-x86_64-linux-gnu.tar.gz"
 install_dir="$HOME"
 
 
