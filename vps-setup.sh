@@ -7,7 +7,8 @@
 set -eo pipefail
 
 dxr_bin_url="https://github.com/dexergiproject/dexergi/releases/download/v1.1.0/dexergi-1.1.0-x86_64-linux-gnu.tar.gz"
-install_dir="/usr/local"
+install_dir="$HOME"
+
 
 main() {
     # check if binaries already exist
@@ -17,6 +18,11 @@ main() {
             echo "URL to dexergi binaries is empty!" >&2
             return 1
         fi
+
+	#adding binaries path to .bashrc
+	echo "PATH=$PATH:$install_dir/bin" >> .bashrc
+
+	export "PATH=$PATH:$install_dir/bin"
 
         # fetch the and extract the dexergi binaries
         curl -fL "$dxr_bin_url" | tar -xzC "$install_dir" --strip-components=1
