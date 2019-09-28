@@ -9,11 +9,12 @@ if [[ "$OSTYPE" =~ ^darwin ]]; then
 else
     data_dir="$HOME/.dexergi"
 fi
-ssh_username="root"
-vps_setup_url="https://github.com/dexergiproject/dxr-mn-scripts/raw/master/vps-setup.sh"
+
+ssh_username="ubuntu"
+vps_setup_url="./vps-setup.sh"
 collateral_amount=1000
 ip_pubkey_db="$HOME/.dxr-masternode-list"
-mn_wait_threshold=$((15 * 60))
+mn_wait_threshold=$((25 * 60))
 pending_activations_list="$HOME/.dxr-pending-activation-list"
 
 ips=()
@@ -51,11 +52,11 @@ main() {
 
         # run the setup script on the VPS
         echo "Running the setup script on the remote VPS."
-        ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" 'curl -fL '"$vps_setup_url"' | bash'
+        cat "$vps_setup_url" | ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}"
 
         # unlock the local wallet
         if [[ ! -z "$DXR_WALLET_PASSPHRASE" ]]; then
-            dexergi-cli walletpassphrase "$DXR_WALLET_PASSPHRASE" 0 false || true
+            dexergi-cli walletpassphrase "$DXR_WALLET_PASSPHRASE" 0 false
         fi
 
         # generate masternode's private key and create a collateral transaction
@@ -66,7 +67,7 @@ main() {
 
         # stop till the transaction has been included in a block
         echo "Waiting for the collateral transaction to be included in a block..."
-        until dexergi-cli gettransaction "$mn_tx_hash" | grep -qs '"blockhash"'; do
+        until grep -qs '"blockhash"' <(dexergi-cli gettransaction "$mn_tx_hash"); do
             echo "Transaction not included in the blockchain."
             for (( i=15; i > 0; i-- )); do
                     echo -en "\rRechecking in $i seconds"
@@ -122,25 +123,25 @@ main() {
             # start masternode from the controller
             output="$(dexergi-cli startmasternode alias false $mn_name)"
             echo "$output"
-            echo "$output" | grep -qs 'Successfully started 1 masternode'
+            grep -qs 'Successfully started 1 masternode' <(echo "$output")
 
             # start the hot node (vps)
             ssh -o StrictHostKeyChecking=no "${ssh_username}@${ip}" '
                 dexergi-cli startmasternode local false | grep -qs "Masternode successfully started"
             ' && hotnode_started="true" && break || hotnode_started="false"
 
-            if [[ "$elapsed" -gt "$mn_wait_threshold" ]]; then
+            if [[ "$elapsed" -ge "$mn_wait_threshold" ]]; then
                 echo "There seems to be some issue. Hot node (VPS) failed to activate after $mn_wait_threshold seconds"
                 break
             fi
 
             echo "Hot node (VPS) not ready after waiting for $elapsed seconds."
-            for (( i=15; i > 0; i-- )); do
+            for (( i=30; i > 0; i-- )); do
                     echo -en "\rRetrying in $i seconds"
                     sleep 1
             done
             echo
-            ((elapsed += 15)) || true
+            ((elapsed += 30)) || true
         done
 
         if [[ "$hotnode_started" == "false" ]]; then
