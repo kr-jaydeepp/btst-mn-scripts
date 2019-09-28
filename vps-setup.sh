@@ -7,8 +7,7 @@
 set -eo pipefail
 
 dxr_bin_url="https://github.com/dexergiproject/dexergi/releases/download/v1.2.0/dexergi-1.2.0-x86_64-linux-gnu.tar.gz"
-install_dir="$HOME"
-
+install_dir="/usr/local"
 
 main() {
     # check if binaries already exist
@@ -19,13 +18,14 @@ main() {
             return 1
         fi
 
-	#adding binaries path to .bashrc
-	echo "PATH=$PATH:$install_dir/bin" >> .bashrc
-
-	export "PATH=$PATH:$install_dir/bin"
-
         # fetch the and extract the dexergi binaries
-        curl -fL "$dxr_bin_url" | tar -xzC "$install_dir" --strip-components=1
+	if [[ $UID -ne 0 ]]; then
+		# non-root user
+		curl -fL "$dxr_bin_url" | sudo tar -xzC "$install_dir" --strip-components=1
+	else
+		# root user
+		curl -fL "$dxr_bin_url" | tar -xzC "$install_dir" --strip-components=1
+	fi
     fi
 
     dexergid -daemon >/dev/null 2>&1
