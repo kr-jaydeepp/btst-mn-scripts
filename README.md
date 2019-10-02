@@ -1,8 +1,8 @@
-# dxr-mn-scripts
-Scripts that facilitate an easy setup of dexergi masternodes  
+# btst-mn-scripts
+Scripts that facilitate an easy setup of bitstats masternodes  
 
 ## Prerequisite
-* 1000 DXR.
+* 1000 BTST.
 * A main Linux computer(Your everyday computer) / Controlling Wallet.
 * Masternode Server(The computer that will be on 24/7).
 * A unique static Public IP address for EACH masternode.
@@ -23,8 +23,8 @@ There can be multiple Identityfiles added to it.
 Following commands are to be runned on controlling wallet.
 
 1. This will download dxr-mn-script to your controlling wallet.
-`git clone https://github.com/dexergiproject/dxr-mn-scripts.git`
-2. cd dxr-mn-scripts
+`git clone https://github.com/bitstatsproject/btst-mn-scripts.git`
+2. cd btst-mn-scripts
 3. Before running the script please read the **Note** section below.
 Running the script 
 ```bash
@@ -34,12 +34,12 @@ Running the script
 ### Different ways of running script
 
 **Note**
-If wallet is encrypted then declare an environment variable named as DXR_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
+If wallet is encrypted then declare an environment variable named as BTST_WALLET_PASSPHRASE="abcd" where "abcd" is your passphrase.  
 
 Example of such command is here.
 ```bash
 unset HISTFILE
-DXR_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
+BTST_WALLET_PASSPHRASE="abcd" ./controller-setup.sh [arguments]
 ```
 
 controller-setup.sh script can take input of masternode ip address as arguement in one of the following ways.
@@ -57,5 +57,5 @@ Example:
 ```
 
 After the script successfully executes following files are added to users home directory     
-* .dxr-masternode-list which keeps a record of all masternode ip address and respective public keys.
-* .dxr-pending-activation-list which keeps a record of all masternode ip address which could not be activated post 15 minite of running of script due to hotnode activation errors. These nodes should be activated by user manually. 
+* .btst-masternode-list which keeps a record of all masternode ip address and respective public keys.
+* .btst-pending-activation-list which keeps a record of all masternode ip address which could not be activated post 15 minite of running of script due to hotnode activation errors. These nodes should be activated by user manually. 
